@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+          "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+          
+<mapper namespace="dao.reply.ReplyDao">
+	<select id="allreply" parameterType="po.post.FindUserPost" resultMap="allreplyresult">
+		select reply_id,reply.post_id ppost_id,user_id,reply_content,last_id,reply_time,u_id,u_username,post.post_id ppost_id,post_title from reply join t_user on reply.user_id=t_user.u_id join post on reply.post_id=post.post_id
+		<where>
+			<if test="question !=null and question !=''">
+				or reply_content like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%')
+				or post_title like concat('%',#{question},'%')
+			</if>
+		</where>
+		limit #{startpage},#{endpage}
+	</select>
+	<resultMap id="allreplyresult" type="po.reply.Reply">
+		<id property="replyid" column="reply_id"></id>
+		<result property="postid" column="ppost_id"></result>
+		<result property="userid" column="user_id"></result>
+		<result property="replycontent" column="reply_content"></result>
+		<result property="lastid" column="last_id"></result>
+		<result property="replytime" column="reply_time"></result>
+		<association property="user" javaType="po.user.User">
+			<id property="id" column="u_id"></id>
+			<result property="username" column="u_username"></result>
+		</association>
+		<association property="postInformation" javaType="po.post.PostInformation">
+			<id property="postid" column="ppost_id"></id>
+			<result property="posttitle" column="post_title"></result>
+		</association>
+	</resultMap>
+
+	<select id="replynum" resultType="int" parameterType="po.post.FindUserPost">
+		select count(*) from reply join t_user on reply.user_id=t_user.u_id join post on reply.post_id=post.post_id
+		<where>
+			<if test="question !=null and question !=''">
+				or reply_content like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%')
+				or post_title like concat('%',#{question},'%')
+			</if>
+		</where>
+	</select>
+
+	<select id="findbylastid" resultMap="lastidresult" parameterType="int">
+		select * from reply join t_user on reply.`user_id`=t_user.`u_id` where last_id=#{lastid}
+	</select>
+	<resultMap id="lastidresult" type="po.reply.Reply">
+		<id property="replyid" column="reply_id"></id>
+		<result property="postid" column="post_id"></result>
+		<result property="userid" column="user_id"></result>
+		<result property="replycontent" column="reply_content"></result>
+		<result property="lastid" column="last_id"></result>
+		<result property="replytime" column="reply_time"></result>
+		<association property="user" javaType="po.user.User">
+			<id property="id" column="u_id"></id>
+			<result property="username" column="u_username"></result>
+			<result property="photopath" column="u_photo"></result>
+		</association>
+	</resultMap>
+
+
+	<select id="comments" parameterType="int" resultMap="commentsresult">
+		select * from reply join t_user on reply.`user_id`=t_user.`u_id` where post_id=#{postid} and last_id is null order by reply_time
+	</select>
+	<resultMap id="commentsresult" type="po.reply.Reply">
+		<id property="replyid" column="reply_id"></id>
+		<result property="postid" column="post_id"></result>
+		<result property="userid" column="user_id"></result>
+		<result property="replycontent" column="reply_content"></result>
+		<result property="lastid" column="last_id"></result>
+		<result property="replytime" column="reply_time"></result>
+		<association property="user" javaType="po.user.User">
+			<id property="id" column="u_id"></id>
+			<result property="username" column="u_username"></result>
+			<result property="photopath" column="u_photo"></result>
+		</association>
+	</resultMap>
+
+	<insert id="addreply" parameterType="po.reply.Reply">
+		insert into reply(post_id,user_id,reply_content,last_id,reply_time) values (#{postid},#{userid},#{replycontent},#{lastid},#{replytime})
+	</insert>
+
+
+	
+
+</mapper>
+

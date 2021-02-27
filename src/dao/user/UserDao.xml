@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+          "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+          
+<mapper namespace="dao.user.UserDao">
+	<select id="integralnum" parameterType="int" resultType="int">
+		select count(*) from integral where integral_user=#{userid}
+	</select>
+
+	<select id="integralrecord" parameterType="po.post.FindUserPost" resultMap="integralrecordresult">
+		SELECT * FROM t_user JOIN integral ON t_user.`u_id`=integral.`integral_user` JOIN integralrule ON integral.`integral_name`=integralrule.`rule_id`
+		where u_id=#{userid} limit #{startpage},#{endpage}
+	</select>
+	<resultMap id="integralrecordresult" type="po.integral.Integral">
+		<id column="integral_id" property="integralid"></id>
+		<result column="integral_score" property="integralscore"></result>
+		<result column="integral_time" property="integraltime"></result>
+		<result column="integral_post" property="integralpost"></result>
+		<association property="user" javaType="po.user.User">
+			<id column="u_id" property="id"></id>
+			<result column="u_username" property="username"></result>
+		</association>
+		<association property="integralRule" javaType="po.integral.IntegralRule">
+			<id column="rule_id" property="ruleid"></id>
+			<result column="rule_name" property="rulename"></result>
+			<result column="rule_score" property="rulescore"></result>
+		</association>
+	</resultMap>
+
+	<select id="find" parameterType="po.user.User" resultType="po.user.User">
+		select u_username username,u_password password,u_mark mark from t_user where u_username=#{username} and u_password=#{password}
+	</select>
+
+	<update id="updateintegral" parameterType="po.user.User">
+		update t_user set  u_integral=#{integral} where u_username=#{username}
+	</update>
+
+	<select id="findintegral" parameterType="String" resultType="Integer">
+		select u_integral from t_user where u_username=#{username}
+	</select>
+
+	<select id="findintegralbyid" parameterType="int" resultType="Integer">
+		select u_integral from t_user where u_id=#{id}
+	</select>
+
+	<select id="findId" parameterType="String" resultType="int">
+		select u_id from t_user where u_username=#{username}
+	</select>
+
+	<select id="findByUserName" parameterType="String" resultType="String">
+		select u_username username from t_user where u_username=#{username}
+	</select>
+
+	<select id="findAll" parameterType="String" resultMap="findAllresult">
+		select * from t_user where u_username=#{username}
+	</select>
+
+	<resultMap id="findAllresult" type="po.user.User">
+		<id property="id" column="u_id"></id>
+		<result property="username" column="u_username"></result>
+		<result property="password" column="u_password"></result>
+		<result property="mark" column="u_mark"></result>
+		<result property="name" column="u_name"></result>
+		<result property="gender" column="u_gender"></result>
+		<result property="speciality" column="u_speciality"></result>
+		<result property="photopath" column="u_photo"></result>
+		<result property="phonenum" column="u_phonenum"></result>
+		<result property="birthday" column="u_birthday"></result>
+		<result property="integral" column="u_integral"></result>
+
+	</resultMap>
+
+	<update id="editInformation" parameterType="po.user.User">
+		update t_user
+        <trim prefix="set" suffixOverrides=",">
+        	<if test="username!=null and username!=''">
+				u_username=#{username},
+			</if>
+			<if test="password !=null and password !=''">
+				 u_password=#{password},
+			</if>
+			<if test="phonenum !=null and phonenum !=''">
+				 u_phonenum=#{phonenum},
+			</if>
+			<if test="name !=null and name !=''">
+				 u_name=#{name},
+			</if>
+			<if test="gender !=null and gender !=''">
+				 u_gender=#{gender},
+			</if>
+			<if test="birthday !=null and birthday !=''">
+				 u_birthday=#{birthday},
+			</if>
+			<if test="photopath !=null and photopath !=''">
+				 u_photo=#{photopath},
+			</if>
+			<if test="speciality !=null and speciality !=''">
+				u_speciality=#{speciality},
+			</if>
+			<if test="integral !=null and integral !=''">
+				u_integral=#{integral},u_mark=#{mark},
+			</if>
+        </trim>
+		where u_id=#{id}
+	</update>
+	
+	<insert id="addUser" parameterType="po.user.User">
+		insert into t_user (u_username,u_password,u_phonenum,u_mark) values(#{username},#{password},#{phonenum},#{mark})
+	</insert>
+
+
+
+
+
+	
+</mapper>
+

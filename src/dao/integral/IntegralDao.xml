@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+          "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+          
+<mapper namespace="dao.integral.IntegralDao">
+
+    <select id="weekmanito" resultMap="weekmanitoresult">
+        SELECT SUM(integral_score) scoresum,u_id,u_username,integral_id FROM integral JOIN t_user ON integral.`integral_user`=t_user.`u_id`
+        WHERE YEARWEEK(DATE_FORMAT(integral_time,'%Y-%m-%d'),1) = YEARWEEK(NOW(),1) GROUP BY integral_user ORDER BY scoresum DESC limit 0,10
+    </select>
+    <resultMap id="weekmanitoresult" type="po.integral.Integral">
+        <id column="integral_id" property="integralid"></id>
+        <result column="scoresum" property="scoresum"></result>
+        <association property="user" javaType="po.user.User">
+            <id column="u_id" property="id"></id>
+            <result column="u_username" property="username"></result>
+        </association>
+    </resultMap>
+
+    <select id="findexist" parameterType="po.integral.Integral" resultType="int">
+        select count(*) from integral
+        <where>
+            <if test="integraluser != null and integraluser != ''">
+                and integral_user=#{integraluser}
+            </if>
+            <if test="integralpost != null and integralpost != ''">
+                and integral_post=#{integralpost}
+            </if>
+            <if test="integralname != null and integralname != ''">
+                and integral_name=#{integralname}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="rulescore" parameterType="String" resultMap="rulescoreresult">
+        select * from integralrule where rule_name=#{rulename}
+    </select>
+    <resultMap id="rulescoreresult" type="po.integral.IntegralRule">
+        <id column="rule_id" property="ruleid"></id>
+        <result column="rule_name" property="rulename"></result>
+        <result column="rule_score" property="rulescore"></result>
+    </resultMap>
+
+    <insert id="addintegral" parameterType="po.integral.Integral">
+        insert into integral(integral_name,integral_user,integral_score,integral_time,integral_post) values (#{integralname},#{integraluser},#{integralscore},#{integraltime},#{integralpost})
+    </insert>
+
+
+
+
+</mapper>
+

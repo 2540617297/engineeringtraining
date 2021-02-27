@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+          "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+          
+<mapper namespace="dao.nav.NavFDao">
+    <select id="findKind" parameterType="int" resultMap="findnavsresult">
+        select * from navs where nf_id=#{nfid}
+    </select>
+    
+    <resultMap id="findnavsresult" type="po.nav.NavS">
+        <id property="navsid" column="ns_id"></id>
+        <result property="navsname" column="ns_name"></result>
+        <result property="navsfid" column="nf_id"></result>
+        <result property="navsherf" column="ns_herf"></result>
+    </resultMap>
+
+    <select id="findAll" parameterType="int" resultMap="navresult">
+        select navf.nf_id nafid,nf_name,ns_id,ns_name,navs.nf_id nafsid,nf_mark,ns_herf from navf,navs where navf.nf_id=navs.nf_id and navs.nf_id=#{navfid}
+    </select>
+
+    <resultMap type="po.nav.NavF" id="navresult">
+        <id  property="navfid"   column=""/>
+        <result property="navfname"  column="nf_name"/>
+        <result property="navfmark" column="nf_mark"></result>
+        <association property="navss"  javaType="po.nav.NavS">
+            <id property="navsid" column="ns_id"></id>
+            <result property="navsname" column="ns_name"></result>
+            <result property="navsfid" column="nafsid"/>
+            <result property="navsherf" column="ns_herf"/>
+        </association>
+    </resultMap>
+
+
+    <select id="findNavf" resultMap="navfresult" parameterType="int">
+        select nf_id navfid,nf_name navfname,nf_mark from navf where nf_mark=#{mark};
+    </select>
+
+    <resultMap id="navfresult" type="po.nav.NavF">
+        <id property="navfid" column="navfid"></id>
+        <result property="navfname" column="navfname"></result>
+        <result property="navfmark" column="nf_mark"></result>
+    </resultMap>
+
+	
+	  
+
+	
+</mapper>
+

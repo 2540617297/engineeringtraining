@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dao.administrator.AdminDao">
+    <select id="helpnum" parameterType="int" resultType="int">
+		select count(*) from service where service_navs=#{servicenavs}
+	</select>
+
+    <update id="updatenavf" parameterType="po.nav.NavF">
+        update navf set nf_name=#{navfname},nf_mark=#{navfmark} where nf_id=#{navfid}
+    </update>
+
+    <update id="updatenavs" parameterType="po.nav.NavS">
+        update navs set ns_name=#{navsname},nf_id=#{navfid},ns_herf=#{navsherf} where ns_id=#{navsid}
+    </update>
+
+    <select id="navfById" parameterType="int" resultMap="navfByIdresult">
+        select * from navf where nf_id=#{navfid}
+    </select>
+    <resultMap id="navfByIdresult" type="po.nav.NavF">
+        <id property="navfid" column="nf_id"></id>
+        <result property="navfname" column="nf_name"></result>
+        <result property="navfmark" column="nf_mark"></result>
+    </resultMap>
+
+    <select id="navsById" parameterType="int" resultMap="navsByIdresult">
+        select * from navs where ns_id=#{navsid}
+    </select>
+    <resultMap id="navsByIdresult" type="po.nav.NavS">
+        <id property="navsid" column="ns_id"></id>
+        <result property="navsname" column="ns_name"></result>
+        <result property="navfid" column="nf_id"></result>
+        <result property="navsherf" column="ns_herf"></result>
+    </resultMap>
+
+    <insert id="addnavs" parameterType="po.nav.NavS">
+		insert into navs(ns_name,nf_id,ns_herf) values (#{navsname},#{navfid},#{navsherf})
+	</insert>
+
+    <insert id="addnavf" parameterType="po.nav.NavF">
+		insert into navf(nf_name,nf_mark) values (#{navfname},#{navfmark})
+	</insert>
+
+    <select id="navffind" resultMap="navffindresult">
+		select * from navf
+	</select>
+    <resultMap id="navffindresult" type="po.nav.Nav">
+        <id column="nf_id" property="navid"></id>
+        <result column="nf_name" property="navfname"></result>
+    </resultMap>
+
+    <select id="navsnum" resultType="int">
+		select count(*) from navs
+	</select>
+
+    <select id="navfnum" resultType="int">
+		select count(*) from navf
+	</select>
+
+    <select id="navf" parameterType="po.post.FindUserPost" resultMap="navfresult">
+		select * from navf limit #{startpage},#{endpage}
+	</select>
+    <resultMap id="navfresult" type="po.nav.Nav">
+        <id property="navid" column="nf_id"></id>
+        <result property="navsname" column="nf_name"></result>
+    </resultMap>
+
+    <select id="navs" parameterType="po.post.FindUserPost" resultMap="navsresult">
+		SELECT ns_id,ns_name,nf_name FROM navs JOIN navf ON navs.nf_id=navf.nf_id LIMIT #{startpage},#{endpage}
+	</select>
+    <resultMap id="navsresult" type="po.nav.Nav">
+        <id property="navid" column="ns_id"></id>
+        <result property="navsname" column="ns_name"></result>
+        <result property="navfname" column="nf_name"></result>
+    </resultMap>
+
+    <delete id="replydel" parameterType="int">
+		delete from reply where reply_id=#{replyid}
+	</delete>
+
+    <select id="allpost" parameterType="po.post.FindUserPost" resultMap="allpostresult">
+        SELECT * FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+        <where>
+            <if test="question !=null and question !=''">
+                or post_title like concat('%',#{question},'%')
+                or ns_name like concat('%',#{question},'%')
+                or post_contenttext like concat('%',#{question},'%')
+                or u_username like concat('%',#{question},'%')
+            </if>
+        </where>
+        order by post_time desc LIMIT #{startpage},#{endpage}
+    </select>
+    <resultMap id="allpostresult" type="po.post.PostInformation">
+        <id column="post_id" property="postid"></id>
+        <result column="post_title" property="posttitle"></result>
+        <result column="post_time" property="posttime"></result>
+        <result column="post_viewnum" property="postview"></result>
+        <result column="post_content" property="postcontent"></result>
+        <association property="user" javaType="po.user.User">
+            <id column="u_id" property="id"></id>
+            <result column="u_username" property="username"></result>
+        </association>
+        <association property="navS" javaType="po.nav.NavS">
+            <id column="ns_id" property="navsid"></id>
+            <result column="ns_name" property="navsname"></result>
+        </association>
+    </resultMap>
+
+    <select id="postnum" resultType="int">
+		select count(*) from post
+	</select>
+
+    <update id="updatenotice" parameterType="po.post.PostInformation">
+		update service set service_title=#{posttitle},service_content=#{postcontent},service_navs=#{postnavs} where service_id=#{postid}
+	</update>
+
+    <select id="findById" resultMap="find" parameterType="int">
+		SELECT  *  FROM t_user JOIN service ON t_user.u_id=service.`service_admin` JOIN navs ON service.`service_navs`=navs.ns_id where service_id=#{serviceid}
+	</select>
+    <resultMap id="find" type="po.post.PostInformation">
+        <id column="service_id" property="postid"></id>
+        <result column="service_title" property="posttitle"></result>
+        <result column="service_viewnum" property="postview"></result>
+        <result column="service_content" property="postcontent"></result>
+        <result column="service_time" property="posttime"></result>
+        <association property="user" javaType="po.user.User">
+            <id column="u_id" property="id"></id>
+            <result column="u_username" property="username"></result>
+        </association>
+        <association property="navS" javaType="po.nav.NavS">
+            <id column="ns_id" property="navsid"></id>
+            <result column="ns_name" property="navsname"></result>
+        </association>
+    </resultMap>
+
+    <select id="noticenum" resultType="int" parameterType="po.post.FindUserPost">
+        select count(*) FROM t_user JOIN service ON t_user.u_id=service.`service_admin` JOIN navs ON
+        service.`service_navs`=navs.ns_id
+        <where>
+            <if test="question !=null and question !=''">
+                or (service_title like concat('%',#{question},'%')
+                or service_content like concat('%',#{question},'%')
+                or ns_name like concat('%',#{question},'%')
+                or u_username like concat('%',#{question},'%'))
+            </if>
+            and service_navs=51
+        </where>
+
+    </select>
+
+
+    <select id="findservicenotice" resultMap="findByIdResult" parameterType="po.post.FindUserPost">
+        SELECT * FROM t_user JOIN service ON t_user.u_id=service.`service_admin` JOIN navs ON
+        service.`service_navs`=navs.ns_id
+        <where>
+            <if test="question !=null and question !=''">
+                or (service_title like concat('%',#{question},'%')
+                or service_content like concat('%',#{question},'%')
+                or ns_name like concat('%',#{question},'%')
+                or u_username like concat('%',#{question},'%'))
+            </if>
+            and service_navs=#{postnavs}
+        </where>
+        LIMIT #{startpage},#{endpage}
+    </select>
+
+    <resultMap id="findByIdResult" type="po.post.PostInformation">
+        <id column="service_id" property="postid"></id>
+        <result column="service_title" property="posttitle"></result>
+        <!--<result column="service_time" property="posttime"></result>-->
+        <result column="service_viewnum" property="postview"></result>
+        <result column="service_content" property="postcontent"></result>
+        <result column="service_time" property="posttime"></result>
+        <association property="user" javaType="po.user.User">
+            <id column="u_id" property="id"></id>
+            <result column="u_username" property="username"></result>
+        </association>
+        <association property="navS" javaType="po.nav.NavS">
+            <id column="ns_id" property="navsid"></id>
+            <result column="ns_name" property="navsname"></result>
+        </association>
+    </resultMap>
+
+
+    <select id="findServiceView" parameterType="int" resultType="int">
+		select service_viewnum from service where service_id=#{serviceid}
+	</select>
+
+    <update id="updateView" parameterType="po.post.UpdateView">
+		update service set service_viewnum=#{count} where service_id=#{postid}
+	</update>
+
+    <insert id="serviceAdd" parameterType="po.post.PostInformation">
+		insert into service(service_title,service_content,service_time,service_admin,service_navs) values(#{posttitle},#{postcontent},#{posttime},#{postuser},#{postnavs})
+	</insert>
+
+    <select id="findKind" parameterType="int" resultMap="findnavsresult">
+        select * from navs where nf_id=#{nfid}
+    </select>
+    <resultMap id="findnavsresult" type="po.nav.NavS">
+        <id property="navsid" column="ns_id"></id>
+        <result property="navsname" column="ns_name"></result>
+        <result property="navsfid" column="nf_id"></result>
+        <result property="navsherf" column="ns_herf"></result>
+    </resultMap>
+
+    <delete id="userdel" parameterType="int">
+		delete from t_user where u_id=#{userid}
+	</delete>
+
+    <select id="usernum" resultType="int">
+        select count(*) from t_user
+        <where>
+            <if test="question !=null and question !=''">
+                or u_username like concat('%',#{question},'%')
+                or u_name like concat('%',#{question},'%')
+                or u_gender like concat('%',#{question},'%')
+                or u_phonenum like concat('%',#{question},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="userlists" resultMap="userlistsresult" parameterType="po.post.FindUserPost">
+        select * from t_user
+        <where>
+            <if test="question !=null and question !=''">
+                or u_username like concat('%',#{question},'%')
+                or u_name like concat('%',#{question},'%')
+                or u_gender like concat('%',#{question},'%')
+                or u_phonenum like concat('%',#{question},'%')
+            </if>
+        </where>
+        LIMIT #{startpage},#{endpage}
+    </select>
+    <resultMap id="userlistsresult" type="po.user.User">
+        <id property="id" column="u_id"></id>
+        <result property="username" column="u_username"></result>
+        <result property="password" column="u_password"></result>
+        <result property="mark" column="u_mark"></result>
+        <result property="name" column="u_name"></result>
+        <result property="gender" column="u_gender"></result>
+        <result property="speciality" column="u_speciality"></result>
+        <result property="phonenum" column="u_phonenum"></result>
+        <result property="birthday" column="u_birthday"></result>
+        <result property="integral" column="u_integral"></result>
+    </resultMap>
+
+
+</mapper>
+

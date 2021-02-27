@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+          "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+          
+<mapper namespace="dao.post.PostDao">
+	<select id="questionpost" parameterType="po.post.FindUserPost" resultMap="daypostresult">
+		SELECT  *  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+			<if test="question !=null and question !=''">
+				or post_title like concat('%',#{question},'%')
+				or post_contenttext like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%')
+			</if>
+		</where>
+		ORDER BY post_viewnum desc LIMIT #{startpage},#{endpage}
+	</select>
+
+	<!--查询用户问题答案条数-->
+	<select id="questionpostnum" resultType="int" parameterType="String">
+		SELECT  count(*)  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+				or post_title like concat('%',#{question},'%')
+				or post_contenttext like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%')
+		</where>
+		order by post_viewnum desc
+	</select>
+
+	<!--本周牛贴-->
+	<select id="weekranking" parameterType="po.post.FindUserPost" resultMap="daypostresult">
+		SELECT * FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		WHERE YEARWEEK(DATE_FORMAT(post_time,'%Y-%m-%d'),1) = YEARWEEK(NOW(),1) ORDER BY post_viewnum DESC LIMIT #{startpage},#{endpage}
+	</select>
+
+	<!--用户帖子删除-->
+	<delete id="userpostdel" parameterType="int">
+		delete from post where post_id=#{postid}
+	</delete>
+
+	<!--查找每日一贴-->
+	<select id="daypost" parameterType="po.post.FindUserPost" resultMap="daypostresult">
+		SELECT  *  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id where post_navs=#{postnavs} ORDER BY post_time DESC LIMIT #{startpage},#{endpage}
+	</select>
+	<resultMap id="daypostresult" type="po.post.PostInformation">
+		<id column="post_id" property="postid"></id>
+		<result column="post_title" property="posttitle"></result>
+		<result column="post_time" property="posttime"></result>
+		<result column="post_content" property="postcontent"></result>
+		<result column="post_viewnum" property="postview"></result>
+		<result column="post_contenttext" property="postcontenttext"></result>
+		<association property="user" javaType="po.user.User">
+			<id column="u_id" property="id"></id>
+			<result column="u_username" property="username"></result>
+		</association>
+		<association property="navS" javaType="po.nav.NavS">
+			<id column="ns_id" property="navsid"></id>
+			<result column="ns_name" property="navsname"></result>
+		</association>
+	</resultMap>
+
+	<select id="navsname" parameterType="int" resultType="String">
+		select ns_name from navs where ns_id=#{navsid}
+	</select>
+
+	<update id="updatepost" parameterType="po.post.PostInformation">
+		update post set post_title=#{posttitle},post_content=#{postcontent},post_contenttext=#{postcontenttext},post_navs=#{postnavs} where post_id=#{postid}
+	</update>
+
+	<select id="collectfind" parameterType="po.post.CollectPost" resultType="Integer">
+		select collect_id from collectpost where collect_user=#{collectuser} and collect_post=#{collectpost}
+	</select>
+
+	<insert id="collectadd" parameterType="po.post.CollectPost">
+		insert into collectpost(collect_user,collect_post,collect_time) values (#{collectuser},#{collectpost},#{collecttime})
+	</insert>
+
+	<!--收藏帖子删除-->
+	<delete id="collectdel" parameterType="int">
+		delete from collectpost where collect_id=#{collectid}
+	</delete>
+
+	<select id="toptime"  resultType="String">
+		SELECT post_time FROM post ORDER BY  post_time DESC LIMIT 0,1
+	</select>
+
+	
+	<select id="postRanking" resultMap="postrankresult" parameterType="po.post.FindUserPost">
+		SELECT  *  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id  ORDER BY post_viewnum DESC LIMIT #{startpage},#{endpage}
+	</select>
+
+	<resultMap id="postrankresult" type="po.post.PostInformation">
+		<id column="post_id" property="postid"></id>
+		<result column="post_title" property="posttitle"></result>
+		<result column="post_time" property="posttime"></result>
+		<result column="post_viewnum" property="postview"></result>
+		<result column="post_content" property="postcontent"></result>
+		<association property="user" javaType="po.user.User">
+			<id column="u_id" property="id"></id>
+			<result column="u_username" property="username"></result>
+		</association>
+		<association property="navS" javaType="po.nav.NavS">
+			<id column="ns_id" property="navsid"></id>
+			<result column="ns_name" property="navsname"></result>
+		</association>
+	</resultMap>
+
+	<select id="findPostView" parameterType="int" resultType="int">
+		select post_viewnum from post where post_id=#{postid}
+	</select>
+
+	<update id="updateView" parameterType="po.post.UpdateView">
+		update post set post_viewnum=#{count} where post_id=#{postid}
+	</update>
+
+	<insert id="postAdd" parameterType="po.post.PostInformation">
+		insert into post (post_title,post_content,post_time,post_user,post_navs,post_contenttext) values(#{posttitle},#{postcontent},#{posttime},#{postuser},#{postnavs},#{postcontenttext})
+	</insert>
+
+	<select id="findById" parameterType="int" resultMap="findByIdResult">
+		SELECT  *  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id  WHERE post_id=#{postid}
+	</select>
+
+	<resultMap id="findByIdResult" type="po.user.User">
+		<id column="u_id" property="id"></id>
+		<result column="u_username" property="username"></result>
+		<collection property="postInformation" ofType="po.post.PostInformation">
+			<id column="post_id" property="postid"></id>
+			<result column="post_title" property="posttitle"></result>
+			<result column="post_time" property="posttime"></result>
+			<result column="post_viewnum" property="postview"></result>
+			<result column="post_content" property="postcontent"></result>
+			<association property="navS" javaType="po.nav.NavS">
+				<id column="ns_id" property="navsid"></id>
+				<result column="ns_name" property="navsname"></result>
+			</association>
+		</collection>
+	</resultMap>
+
+	<!--查询用户帖子-->
+	<select id="findUserPost" parameterType="po.post.FindUserPost" resultMap="userpostresult">
+		SELECT  *  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+			<if test="question !=null and question !=''">
+				or (post_title like concat('%',#{question},'%')
+				or ns_name like concat('%',#{question},'%')
+				or post_content like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%'))
+			</if>
+			and post_user=#{userid}
+		</where>
+		ORDER BY post_time desc LIMIT #{startpage},#{endpage}
+
+	</select>
+
+	<!--查询用户帖子条数-->
+	<select id="alluserpost" resultType="int" parameterType="po.post.FindUserPost">
+		SELECT  count(*)  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+			<if test="question !=null and question !=''">
+				or (post_title like concat('%',#{question},'%')
+				or ns_name like concat('%',#{question},'%')
+				or post_content like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%'))
+			</if>
+			and post_user=#{userid}
+		</where>
+	</select>
+
+
+	<resultMap id="userpostresult" type="po.user.User">
+		<id column="u_id" property="id"></id>
+		<result column="u_username" property="username"></result>
+		<collection property="postInformation" ofType="po.post.PostInformation">
+			<id column="post_id" property="postid"></id>
+			<result column="post_title" property="posttitle"></result>
+			<result column="post_time" property="posttime"></result>
+			<result column="post_view" property="postview"></result>
+			<association property="navS" javaType="po.nav.NavS">
+				<id column="ns_id" property="navsid"></id>
+				<result column="ns_name" property="navsname"></result>
+			</association>
+		</collection>
+	</resultMap>
+
+	<!--帖子分类-->
+	<select id="classifyPost" parameterType="po.post.FindUserPost" resultMap="classifypostresult">
+		SELECT  *  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+			<if test="question !=null and question !=''">
+				or (post_title like concat('%',#{question},'%')
+				or ns_name like concat('%',#{question},'%')
+				or post_content like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%'))
+			</if>
+			and post_navs=#{postnavs}
+		</where>
+	  	ORDER BY post_viewnum desc LIMIT #{startpage},#{endpage}
+	</select>
+
+	<!--分类帖子数目-->
+	<select id="postnumbynavs" parameterType="po.post.FindUserPost" resultType="int">
+		SELECT  count(*)  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+			<if test="question !=null and question !=''">
+				or (post_title like concat('%',#{question},'%')
+				or ns_name like concat('%',#{question},'%')
+				or post_content like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%'))
+			</if>
+			and post_navs=#{postnavs}
+		</where>
+	</select>
+
+	<resultMap id="classifypostresult" type="po.post.PostInformation">
+		<id column="post_id" property="postid"></id>
+		<result column="post_title" property="posttitle"></result>
+		<result column="post_time" property="posttime"></result>
+		<result column="post_viewnum" property="postview"></result>
+		<!--<result column="post_content" property="postcontent"></result>-->
+		<association property="user" javaType="po.user.User">
+			<id column="u_id" property="id"></id>
+			<result column="u_username" property="username"></result>
+		</association>
+		<association property="navS" javaType="po.nav.NavS">
+			<id column="ns_id" property="navsid"></id>
+			<result column="ns_name" property="navsname"></result>
+		</association>
+	</resultMap>
+
+	<!--查找所有帖子数目-->
+	<select id="allpostnum" resultType="int" parameterType="po.post.FindUserPost">
+		SELECT  count(*)  FROM t_user JOIN post ON t_user.u_id=post.post_user JOIN navs ON post.post_navs=navs.ns_id
+		<where>
+			<if test="question !=null and question !=''">
+				or post_title like concat('%',#{question},'%')
+				or ns_name like concat('%',#{question},'%')
+				or post_contenttext like concat('%',#{question},'%')
+				or u_username like concat('%',#{question},'%')
+			</if>
+		</where>
+	</select>
+
+	<!--查找所有收藏帖子的数目-->
+    <select id="collectnumbyuser" parameterType="int" resultType="int">
+		select count(*) from collectpost where collect_user=#{collectuser}
+	</select>
+
+	<!--查找所有收藏的帖子-->
+    <select id="collectpost" parameterType="po.post.FindUserPost" resultMap="collectpostresult">
+		SELECT * FROM collectpost JOIN t_user ON collectpost.collect_user=t_user.u_id JOIN post ON collectpost.collect_post=post.post_id JOIN navs ON post.post_navs=navs.ns_id where collect_user=#{userid} order by collect_time desc LIMIT #{startpage},#{endpage}
+	</select>
+	<resultMap id="collectpostresult" type="po.post.CollectPost">
+		<id property="collectid" column="collect_id"></id>
+		<result property="collecttime" column="collect_time"></result>
+		<association property="user" javaType="po.user.User">
+			<id column="u_id" property="id"></id>
+			<result column="u_username" property="username"></result>
+		</association>
+		<association property="navS" javaType="po.nav.NavS">
+			<id column="ns_id" property="navsid"></id>
+			<result column="ns_name" property="navsname"></result>
+		</association>
+		<association property="postInformation" javaType="po.post.PostInformation">
+			<id column="post_id" property="postid"></id>
+			<result column="post_title" property="posttitle"></result>
+			<result column="post_time" property="posttime"></result>
+			<result column="post_viewnum" property="postview"></result>
+		</association>
+	</resultMap>
+
+</mapper>
+
